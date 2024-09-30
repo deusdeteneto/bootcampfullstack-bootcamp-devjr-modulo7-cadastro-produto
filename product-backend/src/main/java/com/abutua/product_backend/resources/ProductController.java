@@ -1,59 +1,42 @@
 package com.abutua.product_backend.resources;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.abutua.product_backend.models.ProductModel;
+
 
 @RestController
 public class ProductController {
 
-    @GetMapping("/product")
-    public ProductModel getProduct() {
+    private List<ProductModel> productModels = Arrays.asList(
+        new ProductModel(1, "Product 01", "Computador Gamer Verde Java", 100.50, 1, false, false),
+        new ProductModel(2, "Product 02", "Computador Gamer Vermelho Lion", 200.50, 2, true, true),
+        new ProductModel(3, "Product 03", "Computador Gamer Branco Tiger", 300.50, 3, false, true)
+    );
 
-        ProductModel productModel = new ProductModel();
+    @GetMapping("/products/{id}")
+    public ResponseEntity<ProductModel> getProducts(@PathVariable int id) {
 
-        productModel.setId(1);
-        productModel.setName("Product 01");
-        productModel.setPrice(100.50);
-
-        return productModel;
+        ProductModel productModel = productModels.stream()
+        .filter(p -> p.getId() == id)
+        .findFirst()
+        .orElseThrow(() -> new ResponseStatusException (HttpStatus.NOT_FOUND, "Product not found"));
+        return ResponseEntity.ok(productModel);
     }
     
-    @GetMapping("/product-all")
-    public List<ProductModel> getProductAll() {
+    @GetMapping("/products")
+    public List<ProductModel> getAllProducts() {
+        return productModels;
         
-        ProductModel productModel1 = new ProductModel();
-
-        productModel1.setId(1);
-        productModel1.setName("Product 01");
-        productModel1.setPrice(100.50);
-
-        
-        ProductModel productModel2 = new ProductModel();
-
-        productModel2.setId(2);
-        productModel2.setName("Product 02");
-        productModel2.setPrice(200);
-
-
-        ProductModel productModel3 = new ProductModel();
-
-        productModel3.setId(3);
-        productModel3.setName("Product 03");
-        productModel3.setPrice(170.10);
-
-
-        List<ProductModel> listProductModel = new ArrayList<>();
-        listProductModel.add(productModel1);
-        listProductModel.add(productModel2);
-        listProductModel.add(productModel3);
-        
-        return listProductModel;
-
     }
+
     
 }
