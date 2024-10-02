@@ -2,44 +2,40 @@
 $("#inPreco").mask("000.000.000.000.000,00", { reverse: true });
 
 // Array de Produtos Já Listados diretamente no Código
-var products = [
-  {
-    id: 1,
-    name: "Computador M1-TX",
-    description: "Intel I7, 16GB, SSD 256, HD 1T",
-    price: 4900,
-    category: 1,
-    promotion: true,
-    new: true,
-  },
-  {
-    id: 2,
-    name: "Computador M2-TX",
-    description: "Intel I7, 32GB, SSD 512, HD 1T",
-    price: 5900,
-    category: 2,
-    promotion: false,
-    new: true,
-  },
-  {
-    id: 3,
-    name: "Computador M1-T",
-    description: "Intel I5, 16GB, HD 1T",
-    price: 2900,
-    category: 3,
-    promotion: false,
-    new: false,
-  },
-];
+var products = [];
 
-var categories = [
-  { id: 1, name: "Nacional" },
-  { id: 2, name: "Importado" },
-  { id: 3, name: "Produção Própria" },
-];
+var categories = [];
 
 // OnLoad
 loadProducts();
+loadCategories();
+
+// Load all categories
+function loadCategories() {
+  $.ajax({
+    url: "http://localhost:8080/categories",
+    type: "GET",
+    async: false,
+    success: (response) => {
+      categories = response;
+      for (let cat of categories) {
+        document.getElementById(
+          "selectCategory"
+        ).innerHTML += `<option value=${cat.id}>${cat.name}</option>`;
+      }
+    },
+  });
+}
+
+// Load all products
+function loadProducts() {
+  $.getJSON("http://localhost:8080/products", (response) => {
+    products = response;
+    for (let prod of products) {
+      addNewRow(prod);
+    }
+  });
+}
 
 //salvar o produto
 function save() {
@@ -57,21 +53,22 @@ function save() {
     name: document.querySelector("#inName").value,
     description: document.querySelector("#inDesc").value,
     price: precoValor,
-    category: categoriaValue,
+    idCategory: categoriaValue,
     promotion: document.querySelector("#inPromo").checked,
-    new: true,
+    newProduct: true,
   };
-  addNewRow(prod);
-  products.push(prod);
 
-  document.querySelector("#formProduct").reset();
-}
-
-// Load all products
-function loadProducts() {
-  for (let prod of products) {
-    addNewRow(prod);
-  }
+  $.ajax({
+    url: "http://localhost:8080/products",
+    type: "POST",
+    contentType: "application/json",
+    data: JSON.stringify(prod),
+    success: (product) => {
+      addNewRow(product);
+      products.push(product);
+      document.querySelector("#formProduct").reset();
+    },
+  });
 }
 
 //Add nova linha
@@ -97,7 +94,7 @@ function addNewRow(prod) {
     .appendChild(document.createTextNode(formato.format(prod.price)));
 
   // Inserindo o nome da Category
-  var category = categories.find((cat) => cat.id === prod.category);
+  var category = categories.find((cat) => cat.id === prod.idCategory);
   newRow
     .insertCell()
     .appendChild(document.createTextNode(category ? category.name : ""));
@@ -107,7 +104,7 @@ function addNewRow(prod) {
   if (prod.promotion) {
     options = '<span class="badge text-bg-success me-1">P</span>';
   }
-  if (prod.new) {
+  if (prod.newProduct) {
     options += '<span class="badge text-bg-primary">L</span>';
   }
 
